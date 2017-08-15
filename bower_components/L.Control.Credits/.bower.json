@@ -1,0 +1,14 @@
+{
+  "name": "L.Control.Credits",
+  "homepage": "https://github.com/gregallensworth/L.Control.Credits",
+  "_release": "0fc70e9e24",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "0fc70e9e24e55643451ab2e1b3a9f1034fba56e5"
+  },
+  "_source": "https://github.com/gregallensworth/L.Control.Credits.git",
+  "_target": "*",
+  "_originalSource": "https://github.com/gregallensworth/L.Control.Credits.git",
+  "_direct": true
+}
