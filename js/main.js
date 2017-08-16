@@ -1,5 +1,8 @@
+// declare global variables
+const blue = '#3F99FF';
 mapboxgl.accessToken = 'pk.eyJ1Ijoia2V2aW5mYW4yMyIsImEiOiJjaXV0Ymo5eDIwMHhhMnhsZ3YxNHBjeWZuIn0.6VFBg8iqnjPGwUniL8wgWg';
 
+// map element
 var map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/kevinfan23/cj6duchkb0zb52sqjq0z9c0ka',
@@ -12,6 +15,31 @@ var map = new mapboxgl.Map({
 
 // disable map zoom when using scroll
 map.scrollZoom.disable();
+
+// map onload
+map.on('load', function() {
+  console.log("loaded");
+  animate_revealer();
+});
+
+// animate logo reveal animations
+function animate_revealer() {
+		var rev_logo = new RevealFx(document.querySelector('#rev-logo'), {
+			revealSettings : {
+				bgcolor: blue,
+				direction: 'lr',
+				delay: 1000,
+				duration: 250,
+				easing: 'easeInOutQuint',
+				onCover: function(contentEl, revealerEl) {
+					contentEl.style.opacity = 1;
+				}
+			}
+		});
+
+	rev_logo.reveal();
+
+}
 
 // Create a GeoJSON source with an empty lineString.
 // var geojson = {

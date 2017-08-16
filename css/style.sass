@@ -1,3 +1,6 @@
+/*** Import Sources ***/
+@import 'vendor/revealer'
+
 /*** Global Styles ***/
 html
   box-sizing: border-box
@@ -21,10 +24,11 @@ body
   top: 0
   bottom: 0
   width: 100%
-  z-index: 0
+  z-index: -1 !important
 
 a.logo
 	position: absolute
+  display: none
 	top: 30px
 	left: 30px
   z-index: 999
@@ -35,5 +39,5 @@ a.logo
 	padding: 0
 
 #logo-img, div#rev-logo
-	width: 60px
-	height: 22px
+  width: 60px
+  height: 22px
