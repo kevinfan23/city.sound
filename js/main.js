@@ -47,16 +47,47 @@ function parse_json() {
   // GeoJSON source: https://dev.socrata.com/foundry/data.cityofnewyork.us/i4gi-tjb9
   // https://data.cityofnewyork.us/resource/i4gi-tjb9.json
   $.getJSON( "https://data.cityofnewyork.us/resource/i4gi-tjb9.json", function(data) {
-    $.each(data, function(key, val) {
-      var coordinates = [];
+    //$.each(data, function(key, val) {
+    val = data[0];
+
+      // Get the coordinates of the traffic lines
+      var coordinatesLine = [];
       var coordinatesString = val['link_points'].split(" ");
+
       for (var i = 0; i < coordinatesString.length; i++) {
           var coord = coordinatesString[i].split(',');
-          coordinates.push(coord.map(Number));
+          coordinatesLine.push(coord.map(Number).reverse());
           //Do something
       }
-      console.log(coordinates);
+      console.log(coordinatesLine);
 
+        map.addLayer({
+                "id": "route",
+                "type": "line",
+                "source": {
+                    "type": "geojson",
+                    "data": {
+                        "type": "Feature",
+                        "properties": {},
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": coordinatesLine
+                        }
+                    }
+                },
+                "layout": {
+                    "line-join": "miter",
+                    "line-cap": "butt"
+                },
+                "paint": {
+                    "line-color": "#db7b2b",
+                    "line-width": 6
+                }
+            });
+
+    //});
+  });
+}
 
       // var traffic = {
       //   "coordinates": [
@@ -83,9 +114,6 @@ function parse_json() {
       //         'line-opacity': .8
       //     }
       // });
-    });
-  });
-}
 
 // var audio = new Audio('audio_file.mp3');
 // audio.play();
