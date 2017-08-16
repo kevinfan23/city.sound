@@ -7,7 +7,7 @@ var map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/kevinfan23/cj6duchkb0zb52sqjq0z9c0ka',
     center: [-73.980939, 40.735686],
-    zoom: 12.3,
+    zoom: 11.75,
     attributionControl: false,
     pitch: 45,
     //interactive: false
@@ -20,6 +20,7 @@ map.scrollZoom.disable();
 map.on('load', function() {
   console.log("loaded");
   animate_revealer();
+  parse_json();
 });
 
 // animate logo reveal animations
@@ -38,8 +39,41 @@ function animate_revealer() {
 		});
 
 	rev_logo.reveal();
-
 }
+
+function parse_json() {
+  // JQuery get json from url
+  // http://api.jquery.com/jquery.parsejson/
+  // GeoJSON source: https://dev.socrata.com/foundry/data.cityofnewyork.us/i4gi-tjb9
+  // https://data.cityofnewyork.us/resource/i4gi-tjb9.json
+  $.getJSON( "https://data.cityofnewyork.us/resource/i4gi-tjb9.json", function(data) {
+    $.each(data, function(key, val) {
+      //var
+      console.log(val);
+          // add the line which will be modified in the animation
+      map.addLayer({
+          'id': 'line-animation',
+          'type': 'line',
+          'source': {
+              'type': 'geojson',
+              'data': geojson
+          },
+          'layout': {
+              'line-cap': 'round',
+              'line-join': 'round'
+          },
+          'paint': {
+              'line-color': '#ed6498',
+              'line-width': 5,
+              'line-opacity': .8
+          }
+      });
+    });
+  });
+}
+
+// var audio = new Audio('audio_file.mp3');
+// audio.play();
 
 // Create a GeoJSON source with an empty lineString.
 // var geojson = {
