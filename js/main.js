@@ -57,7 +57,6 @@ function parse_json() {
       for (var i = 0; i < coordinatesString.length; i++) {
           var coord = coordinatesString[i].split(',');
           coordinatesLine.push(coord.map(Number).reverse());
-          //Do something
       }
       console.log(coordinatesLine);
 
@@ -81,7 +80,8 @@ function parse_json() {
                 },
                 "paint": {
                     "line-color": "#db7b2b",
-                    "line-width": 6
+                    "line-opacity": 0.8,
+                    "line-width": 4
                 }
             });
 
