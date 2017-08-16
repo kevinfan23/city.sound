@@ -48,26 +48,41 @@ function parse_json() {
   // https://data.cityofnewyork.us/resource/i4gi-tjb9.json
   $.getJSON( "https://data.cityofnewyork.us/resource/i4gi-tjb9.json", function(data) {
     $.each(data, function(key, val) {
-      //var
-      console.log(val);
+      var coordinates = [];
+      var coordinatesString = val['link_points'].split(" ");
+      for (var i = 0; i < coordinatesString.length; i++) {
+          var coord = coordinatesString[i].split(',');
+          coordinates.push(coord.map(Number));
+          //Do something
+      }
+      console.log(coordinates);
+
+
+      // var traffic = {
+      //   "coordinates": [
+      //       [0, 0],
+      //   ],
+      //
+      // };
+
           // add the line which will be modified in the animation
-      map.addLayer({
-          'id': 'line-animation',
-          'type': 'line',
-          'source': {
-              'type': 'geojson',
-              'data': geojson
-          },
-          'layout': {
-              'line-cap': 'round',
-              'line-join': 'round'
-          },
-          'paint': {
-              'line-color': '#ed6498',
-              'line-width': 5,
-              'line-opacity': .8
-          }
-      });
+      // map.addLayer({
+      //     'id': 'line-animation',
+      //     'type': 'line',
+      //     'source': {
+      //         'type': 'geojson',
+      //         'data': geojson
+      //     },
+      //     'layout': {
+      //         'line-cap': 'round',
+      //         'line-join': 'round'
+      //     },
+      //     'paint': {
+      //         'line-color': '#ed6498',
+      //         'line-width': 5,
+      //         'line-opacity': .8
+      //     }
+      // });
     });
   });
 }
