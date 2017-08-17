@@ -1,9 +1,10 @@
 // declare global variables
 const blue = '#3F99FF';
 mapboxgl.accessToken = 'pk.eyJ1Ijoia2V2aW5mYW4yMyIsImEiOiJjaXV0Ymo5eDIwMHhhMnhsZ3YxNHBjeWZuIn0.6VFBg8iqnjPGwUniL8wgWg';
+var map_loaded = false;
+var map;
 
-// map element
-var map = new mapboxgl.Map({
+map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/kevinfan23/cj6duchkb0zb52sqjq0z9c0ka',
     center: [-73.980939, 40.735686],
@@ -13,15 +14,149 @@ var map = new mapboxgl.Map({
     //interactive: false
 });
 
-// disable map zoom when using scroll
-map.scrollZoom.disable();
+  map.on('load', function() {
+    console.log("loaded");
+    animate_revealer();
+    //parse_json();
+  });
 
-// map onload
-map.on('load', function() {
-  console.log("loaded");
-  animate_revealer();
-  parse_json();
-});
+  // map.on('mousemove', function (e) {
+  //       // e.point is the x, y coordinates of the mousemove event relative
+  //       // to the top-left corner of the map
+  //       //JSON.stringify(e.point) + '<br />' +
+  //       // e.lngLat is the longitude, latitude geographical position of the event
+  //       console.log(e.lngLat);
+  // });
+
+  window.human = false;
+
+  var canvasEl = document.querySelector('.fireworks');
+  var ctx = canvasEl.getContext('2d');
+  var numberOfParticules = 30;
+  var pointerX = 0;
+  var pointerY = 0;
+  var tap = ('ontouchstart' in window || navigator.msMaxTouchPoints) ? 'touchstart' : 'mousedown';
+  var colors = ['#FF1461', '#18FF92', '#5A87FF', '#FBF38C'];
+
+  function setCanvasSize() {
+    canvasEl.width = window.innerWidth * 2;
+    canvasEl.height = window.innerHeight * 2;
+    canvasEl.style.width = window.innerWidth + 'px';
+    canvasEl.style.height = window.innerHeight + 'px';
+    canvasEl.getContext('2d').scale(2, 2);
+  }
+
+  function updateCoords(e) {
+    pointerX = e.clientX || e.touches[0].clientX;
+    pointerY = e.clientY || e.touches[0].clientY;
+  }
+
+  function setParticuleDirection(p) {
+    var angle = anime.random(0, 360) * Math.PI / 180;
+    var value = anime.random(50, 180);
+    var radius = [-1, 1][anime.random(0, 1)] * value;
+    return {
+      x: p.x + radius * Math.cos(angle),
+      y: p.y + radius * Math.sin(angle)
+    }
+  }
+
+  function createParticule(x,y) {
+    var p = {};
+    p.x = x;
+    p.y = y;
+    p.color = colors[anime.random(0, colors.length - 1)];
+    p.radius = anime.random(16, 32);
+    p.endPos = setParticuleDirection(p);
+    p.draw = function() {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI, true);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+    }
+    return p;
+  }
+
+  function createCircle(x,y) {
+    var p = {};
+    p.x = x;
+    p.y = y;
+    p.color = '#FFF';
+    p.radius = 0.1;
+    p.alpha = .5;
+    p.lineWidth = 6;
+    p.draw = function() {
+      ctx.globalAlpha = p.alpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI, true);
+      ctx.lineWidth = p.lineWidth;
+      ctx.strokeStyle = p.color;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    return p;
+  }
+
+  function renderParticule(anim) {
+    for (var i = 0; i < anim.animatables.length; i++) {
+      anim.animatables[i].target.draw();
+    }
+  }
+
+  function animateParticules(x, y) {
+    var circle = createCircle(x, y);
+    var particules = [];
+    for (var i = 0; i < numberOfParticules; i++) {
+      particules.push(createParticule(x, y));
+    }
+    anime.timeline().add({
+      targets: circle,
+      radius: anime.random(80, 160),
+      lineWidth: 0,
+      alpha: {
+        value: 0,
+        easing: 'linear',
+        duration: anime.random(600, 800),
+      },
+      duration: anime.random(1200, 1800),
+      easing: 'easeOutExpo',
+      update: renderParticule,
+      offset: 0
+    });
+  }
+
+  var render = anime({
+    duration: Infinity,
+    update: function() {
+      ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+    }
+  });
+
+  document.addEventListener(tap, function(e) {
+    window.human = true;
+    render.play();
+    updateCoords(e);
+    animateParticules(pointerX, pointerY);
+  }, false);
+
+  var centerX = window.innerWidth / 2;
+  var centerY = window.innerHeight / 2;
+
+  setCanvasSize();
+  window.addEventListener('resize', setCanvasSize, false);
+//
+// function setup() {
+//   createCanvas(displayWidth,displayHeight);
+//   // disable map zoom when using scroll
+//   map.scrollZoom.disable();
+//
+//   map.on('load', function() {
+//     console.log("loaded");
+//     animate_revealer();
+//     //parse_json();
+//     map_loaded = true;
+//   });
+// }
 
 // animate logo reveal animations
 function animate_revealer() {
@@ -41,158 +176,121 @@ function animate_revealer() {
 	rev_logo.reveal();
 }
 
+// function parse_json() {
+  // // JQuery get json from url
+  // // http://api.jquery.com/jquery.parsejson/
+  // // GeoJSON source: https://dev.socrata.com/foundry/data.cityofnewyork.us/i4gi-tjb9
+  // // https://data.cityofnewyork.us/resource/i4gi-tjb9.json
+  // $.getJSON( "https://data.cityofnewyork.us/resource/i4gi-tjb9.json", function(data) {
+  //   //$.each(data, function(key, val) {
+  //   val = data[0];
+  //
+  //     // Get the coordinates of the traffic lines
+  //     var coordinatesLine = [];
+  //     var coordinatesString = val['link_points'].split(" ");
+  //
+  //     for (var i = 0; i < coordinatesString.length; i++) {
+  //         var coord = coordinatesString[i].split(',');
+  //         coordinatesLine.push(coord.map(Number).reverse());
+  //     }
+  //     console.log(coordinatesLine);
+  //
+  //       map.addLayer({
+  //               "id": "route",
+  //               "type": "line",
+  //               "source": {
+  //                   "type": "geojson",
+  //                   "data": {
+  //                       "type": "Feature",
+  //                       "properties": {},
+  //                       "geometry": {
+  //                           "type": "LineString",
+  //                           "coordinates": coordinatesLine
+  //                       }
+  //                   }
+  //               },
+  //               "layout": {
+  //                   "line-join": "miter",
+  //                   "line-cap": "butt"
+  //               },
+  //               "paint": {
+  //                   "line-color": "#db7b2b",
+  //                   "line-opacity": 0.75,
+  //                   "line-width": 4
+  //               }
+  //           });
+  //
+  //   //});
+  // });
+// }
+
 function parse_json() {
-  // JQuery get json from url
-  // http://api.jquery.com/jquery.parsejson/
-  // GeoJSON source: https://dev.socrata.com/foundry/data.cityofnewyork.us/i4gi-tjb9
-  // https://data.cityofnewyork.us/resource/i4gi-tjb9.json
-  $.getJSON( "https://data.cityofnewyork.us/resource/i4gi-tjb9.json", function(data) {
-    //$.each(data, function(key, val) {
-    val = data[0];
+  d3.json('https://data.cityofnewyork.us/resource/i4gi-tjb9.json', function(err, data) {
+    if (err) throw err;
+    //console.log(data);
 
-      // Get the coordinates of the traffic lines
-      var coordinatesLine = [];
-      var coordinatesString = val['link_points'].split(" ");
+    var i = 0;
+    var timer = window.setInterval(function() {
+      if (i < data.length) {
+          // data.features[0].geometry.coordinates.push(coordinates[i]);
+          // map.getSource('trace').setData(data);
+          // map.panTo(coordinates[i]);
 
-      for (var i = 0; i < coordinatesString.length; i++) {
-          var coord = coordinatesString[i].split(',');
-          coordinatesLine.push(coord.map(Number).reverse());
+          // get the coordinates of the traffic lines
+          // to draw a straight line, we only take the first two points
+          var coordinatesLine = [];
+          var coordinatesString = data[i]['link_points'].split(" ");
+          var coordinates = [];
+
+          // console.log(coordinatesString);
+          for (var j = 0; j < coordinatesString.length; j++) {
+              if (!coordinatesString[j].isEmpty) {
+                var coord = coordinatesString[j].split(',');
+                coordinatesLine.push(coord.map(Number).reverse());
+              }
+          }
+          //console.log(coordinatesLine[0]);
+          for (var j = 0; j < coordinatesLine.length; j++) {
+            if (coordinatesLine[j] != 0) {
+              coordinates.push(coordinatesLine[j]);
+            }
+            if (coordinates.length >= 2) {
+              break;
+            }
+          }
+          console.log(coordinates);
+          // var geoPath = d3.geoPath();
+          // var geoMultiPoint = {
+          //         "type": "MultiPoint",
+          //         "coordinates": coordinates
+          // };
+          //console.log(coordinates);
+          // var geoPath = d3.geoPath();
+          //
+          // var geoLineString = {
+          //     "type": "LineString",
+          //     "coordinates": coordinates
+          // };
+          //
+          // var width = 400,
+          //     height = 400,
+          //     geoPath = d3.geoPath();
+          //     // SVG Container
+          //
+          // var svgContainer = d3.select("body").append("svg")
+          //     .attr("width", width)
+          //     .attr("height", height)
+          //     .style("border", "2px solid steelblue")
+          //
+          // var lineStringPath = svgContainer.append("path")
+          //     .attr("d", "M-73.994441,40.77158L-73.99455,40.7713004")
+          //     .style("stroke", "#FF00FF");
+          i++;
       }
-      console.log(coordinatesLine);
+      else {
+          window.clearInterval(timer);
+      }
+    }, 1000);
 
-        map.addLayer({
-                "id": "route",
-                "type": "line",
-                "source": {
-                    "type": "geojson",
-                    "data": {
-                        "type": "Feature",
-                        "properties": {},
-                        "geometry": {
-                            "type": "LineString",
-                            "coordinates": coordinatesLine
-                        }
-                    }
-                },
-                "layout": {
-                    "line-join": "miter",
-                    "line-cap": "butt"
-                },
-                "paint": {
-                    "line-color": "#db7b2b",
-                    "line-opacity": 0.8,
-                    "line-width": 4
-                }
-            });
-
-    //});
   });
 }
-
-      // var traffic = {
-      //   "coordinates": [
-      //       [0, 0],
-      //   ],
-      //
-      // };
-
-          // add the line which will be modified in the animation
-      // map.addLayer({
-      //     'id': 'line-animation',
-      //     'type': 'line',
-      //     'source': {
-      //         'type': 'geojson',
-      //         'data': geojson
-      //     },
-      //     'layout': {
-      //         'line-cap': 'round',
-      //         'line-join': 'round'
-      //     },
-      //     'paint': {
-      //         'line-color': '#ed6498',
-      //         'line-width': 5,
-      //         'line-opacity': .8
-      //     }
-      // });
-
-// var audio = new Audio('audio_file.mp3');
-// audio.play();
-
-// Create a GeoJSON source with an empty lineString.
-// var geojson = {
-//     "type": "FeatureCollection",
-//     "features": [{
-//         "type": "Feature",
-//         "geometry": {
-//             "type": "LineString",
-//             "coordinates": [
-//                 [0, 0]
-//             ]
-//         }
-//     }]
-// };
-
-// var speedFactor = 30; // number of frames per longitude degree
-// var animation; // to store and cancel the animation
-// var startTime = 0;
-// var progress = 0; // progress = timestamp - startTime
-// var resetTime = false; // indicator of whether time reset is needed for the animation
-//
-// map.on('load', function() {
-//
-//     // add the line which will be modified in the animation
-//     map.addLayer({
-//         'id': 'line-animation',
-//         'type': 'line',
-//         'source': {
-//             'type': 'geojson',
-//             'data': geojson
-//         },
-//         'layout': {
-//             'line-cap': 'round',
-//             'line-join': 'round'
-//         },
-//         'paint': {
-//             'line-color': '#ed6498',
-//             'line-width': 5,
-//             'line-opacity': .8
-//         }
-//     });
-//
-//     startTime = performance.now();
-//
-//     animateLine();
-//
-//     // reset startTime and progress once the tab loses or gains focus
-//     // requestAnimationFrame also pauses on hidden tabs by default
-//     document.addEventListener('visibilitychange', function() {
-//         resetTime = true;
-//     });
-//
-//     // animated in a circle as a sine wave along the map.
-//     function animateLine(timestamp) {
-//         if (resetTime) {
-//             // resume previous progress
-//             startTime = performance.now() - progress;
-//             resetTime = false;
-//         } else {
-//             progress = timestamp - startTime;
-//         }
-//
-//         // restart if it finishes a loop
-//         if (progress > speedFactor * 360) {
-//             startTime = timestamp;
-//             geojson.features[0].geometry.coordinates = [];
-//         } else {
-//             var x = progress / speedFactor;
-//             // draw a sine wave with some math.
-//             var y = Math.sin(x * Math.PI / 90) * 40;
-//             // append new coordinates to the lineString
-//             geojson.features[0].geometry.coordinates.push([x, y]);
-//             // then update the map
-//             map.getSource('line-animation').setData(geojson);
-//         }
-//         // Request the next frame of the animation.
-//         animation = requestAnimationFrame(animateLine);
-//     }
-// });
