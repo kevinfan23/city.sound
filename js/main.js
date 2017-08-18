@@ -95,8 +95,8 @@ function parse_json() {
           var x = (coordinates[0] - offLon1)/geo_canvas_ratioX;
           var y = (coordinates[1] - offLat1)/geo_canvas_ratioY;
 
-          console.log("x is: " + x + ", y is: " + y);
-          console.log(borough);
+          // console.log("x is: " + x + ", y is: " + y);
+          // console.log(borough);
 
           animateParticules(x-500, y-50, 0.2, speed);
           i++;
@@ -104,8 +104,34 @@ function parse_json() {
       else {
           window.clearInterval(timer);
       }
-    }, 500);
+    }, 311);
 
+    var delayMillis = 1000; //1 second
+
+    var j = 0;
+    var music_timer = window.setInterval(function() {
+      if (j == 2) {
+        var chord = new Howl({
+          src: ['music/chords/Fmajor7.wav'],
+          autoplay: true,
+          loop: false,
+          volume: 0.3,
+        });
+
+        chord.play();
+      }
+      else {
+        j++;
+      }
+    }, 3115);
+
+    setTimeout(function() {
+      var song = new Howl({
+        src: ['music/lost_stars.mp3'],
+      });
+
+      song.play();
+    }, 2300);
   });
 }
 
