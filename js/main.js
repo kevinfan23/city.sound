@@ -2,6 +2,28 @@
 const blue = '#3F99FF';
 mapboxgl.accessToken = 'pk.eyJ1Ijoia2V2aW5mYW4yMyIsImEiOiJjaXV0Ymo5eDIwMHhhMnhsZ3YxNHBjeWZuIn0.6VFBg8iqnjPGwUniL8wgWg';
 const zoom = 11;
+const chords = ['music/chords/Fmajor7.wav',
+  'music/chords/Fmajor7.wav',
+  'music/chords/Fmajor7.wav',
+  'music/chords/Fmajor7.wav',
+  'music/chords/Fmajor7.wav',
+  'music/chords/Fmajor7.wav',
+  'music/chords/Fmajor7.wav',
+  'music/chords/Fmajor7.wav',
+  'music/chords/Em.wav',
+  'music/chords/Fmajor7.wav',
+  'music/chords/Em.wav',
+  'music/chords/Fmajor7.wav',
+  'music/chords/Em.wav',
+  'music/chords/Fmajor7.wav',
+  'music/chords/Gsus.wav',
+  'music/chords/G.wav',
+  'music/chords/Fmajor7.wav',
+  'music/chords/C.wav',
+  'music/chords/Fmajor7.wav',
+  'music/chords/C.wav',
+  'music/chords/Fmajor7.wav',
+];
 
 // coordinates offsets
 // top left corner
@@ -104,26 +126,32 @@ function parse_json() {
       else {
           window.clearInterval(timer);
       }
-    }, 311);
+    }, 309);
 
     var delayMillis = 1000; //1 second
 
     var j = 0;
     var music_timer = window.setInterval(function() {
-      if (j == 2) {
-        var chord = new Howl({
-          src: ['music/chords/Fmajor7.wav'],
-          autoplay: true,
-          loop: false,
-          volume: 0.3,
-        });
-
-        chord.play();
+      if (j == 13) {
+        setTimeout(function() {
+          var chord = new Howl({
+            src: [chords[j]],
+            autoplay: true,
+            volume: 0.3,
+          });
+          chord.play();
+        }, 300);
       }
       else {
-        j++;
+        var chord = new Howl({
+          src: [chords[j]],
+          autoplay: true,
+          volume: 0.3,
+        });
+        chord.play();
       }
-    }, 3115);
+      j++;
+    }, 3090);
 
     setTimeout(function() {
       var song = new Howl({
