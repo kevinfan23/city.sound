@@ -1,24 +1,43 @@
 // declare global variables
 const blue = '#3F99FF';
 mapboxgl.accessToken = 'pk.eyJ1Ijoia2V2aW5mYW4yMyIsImEiOiJjaXV0Ymo5eDIwMHhhMnhsZ3YxNHBjeWZuIn0.6VFBg8iqnjPGwUniL8wgWg';
+const zoom = 11;
+
+// coordinates offsets
+// top left corner
+// lat: 40.84926763226528
+// lng: -74.17880233274501
+
+// bottom right corner
+// lat: 40.66914920135909
+// lng: -73.86437121410064
+const offLon1 = -74.17880;
+const offLat1 = 40.84926;
+const offLon2 = -73.86437;
+const offLat2 = 40.66914;
+const screenX = 1440;
+const screenY = 862;
+
+const pi = Math.PI;
+
 var map_loaded = false;
 var map;
 
 map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/kevinfan23/cj6duchkb0zb52sqjq0z9c0ka',
-    center: [-73.980939, 40.735686],
-    zoom: 11.75,
-    attributionControl: false,
-    pitch: 38,
-    //interactive: false
+  container: 'map',
+  style: 'mapbox://styles/kevinfan23/cj6duchkb0zb52sqjq0z9c0ka',
+  center: [-73.980939, 40.735686],
+  zoom: zoom,
+  attributionControl: false,
+  pitch: 38,
+  //interactive: false
 });
 
-  map.on('load', function() {
-    console.log("loaded");
-    animate_revealer();
-    //parse_json();
-  });
+map.on('load', function() {
+  console.log("loaded");
+  animate_revealer();
+  parse_json();
+});
 
   // map.on('mousemove', function (e) {
   //       // e.point is the x, y coordinates of the mousemove event relative
@@ -28,15 +47,75 @@ map = new mapboxgl.Map({
   //       console.log(e.lngLat);
   // });
 
+function parse_json() {
+  var geo_canvas_ratioX = (offLon2 - offLon1)/screenX;
+  var geo_canvas_ratioY = (offLat2 - offLat1)/screenY;
+
+  d3.json('https://data.cityofnewyork.us/resource/i4gi-tjb9.json', function(err, data) {
+    if (err) throw err;
+    //console.log(data);
+
+    var i = 0;
+    var timer = window.setInterval(function() {
+      if (i < data.length) {
+          // data.features[0].geometry.coordinates.push(coordinates[i]);
+          // map.getSource('trace').setData(data);
+          // map.panTo(coordinates[i]);
+
+          // get the coordinates of the traffic lines
+          // to draw a straight line, we only take the first two points
+          var coordinatesLine = [];
+          var coordinatesString = data[i]['link_points'].split(" ");
+          var speed = data[i]['speed'];
+          var borough = data[i]['borough'];
+          var coordinates = [];
+
+          // console.log(coordinatesString);
+          for (var j = 0; j < coordinatesString.length; j++) {
+              if (!coordinatesString[j].isEmpty) {
+                var coord = coordinatesString[j].split(',');
+                coordinatesLine.push(coord.reverse());
+              }
+          }
+          //console.log(coordinatesLine[0]);
+          for (var j = 0; j < coordinatesLine.length; j++) {
+            if (coordinatesLine[j] != 0) {
+              coordinates.push(coordinatesLine[j]);
+            }
+            if (coordinates.length >= 1) {
+              break;
+            }
+          }
+          coordinates = coordinates[0];
+          // // convert mercator geo coordinate
+          // console.log(coordinates[0]);
+          // console.log("lat is: " + coordinates[1] + ", lon is: " + coordinates[0]);
+          // console.log(speed);
+
+          var x = (coordinates[0] - offLon1)/geo_canvas_ratioX;
+          var y = (coordinates[1] - offLat1)/geo_canvas_ratioY;
+
+          console.log("x is: " + x + ", y is: " + y);
+          console.log(borough);
+
+          animateParticules(x-500, y-50, 0.2, speed);
+          i++;
+      }
+      else {
+          window.clearInterval(timer);
+      }
+    }, 500);
+
+  });
+}
+
+// Generate ripple effects
+// adapted from Anime.js example
+// https://codepen.io/juliangarnier/pen/gmOwJX
   window.human = false;
 
-  var canvasEl = document.querySelector('.fireworks');
+  var canvasEl = document.querySelector('.canvas');
   var ctx = canvasEl.getContext('2d');
-  var numberOfParticules = 30;
-  var pointerX = 0;
-  var pointerY = 0;
-  var tap = ('ontouchstart' in window || navigator.msMaxTouchPoints) ? 'touchstart' : 'mousedown';
-  var colors = ['#FF1461', '#18FF92', '#5A87FF', '#FBF38C'];
 
   function setCanvasSize() {
     canvasEl.width = window.innerWidth * 2;
@@ -46,45 +125,15 @@ map = new mapboxgl.Map({
     canvasEl.getContext('2d').scale(2, 2);
   }
 
-  function updateCoords(e) {
-    pointerX = e.clientX || e.touches[0].clientX;
-    pointerY = e.clientY || e.touches[0].clientY;
-  }
-
-  function setParticuleDirection(p) {
-    var angle = anime.random(0, 360) * Math.PI / 180;
-    var value = anime.random(50, 180);
-    var radius = [-1, 1][anime.random(0, 1)] * value;
-    return {
-      x: p.x + radius * Math.cos(angle),
-      y: p.y + radius * Math.sin(angle)
-    }
-  }
-
-  function createParticule(x,y) {
+  function createCircle(x,y,r,s) {
+    var hue = s*1.5;
     var p = {};
     p.x = x;
     p.y = y;
-    p.color = colors[anime.random(0, colors.length - 1)];
-    p.radius = anime.random(16, 32);
-    p.endPos = setParticuleDirection(p);
-    p.draw = function() {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI, true);
-      ctx.fillStyle = p.color;
-      ctx.fill();
-    }
-    return p;
-  }
-
-  function createCircle(x,y) {
-    var p = {};
-    p.x = x;
-    p.y = y;
-    p.color = '#FFF';
-    p.radius = 0.1;
-    p.alpha = .5;
-    p.lineWidth = 6;
+    p.color = 'hsl(' + hue + ', 100%, 70%)';
+    p.radius = r;
+    p.alpha = 1;
+    p.lineWidth = 20;
     p.draw = function() {
       ctx.globalAlpha = p.alpha;
       ctx.beginPath();
@@ -103,12 +152,10 @@ map = new mapboxgl.Map({
     }
   }
 
-  function animateParticules(x, y) {
-    var circle = createCircle(x, y);
+  function animateParticules(x, y, r, s) {
+    var circle = createCircle(x, y, r, s);
     var particules = [];
-    for (var i = 0; i < numberOfParticules; i++) {
-      particules.push(createParticule(x, y));
-    }
+
     anime.timeline().add({
       targets: circle,
       radius: anime.random(80, 160),
@@ -116,7 +163,7 @@ map = new mapboxgl.Map({
       alpha: {
         value: 0,
         easing: 'linear',
-        duration: anime.random(600, 800),
+        duration: anime.random(1000, 1200),
       },
       duration: anime.random(1200, 1800),
       easing: 'easeOutExpo',
@@ -131,13 +178,6 @@ map = new mapboxgl.Map({
       ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
     }
   });
-
-  document.addEventListener(tap, function(e) {
-    window.human = true;
-    render.play();
-    updateCoords(e);
-    animateParticules(pointerX, pointerY);
-  }, false);
 
   var centerX = window.innerWidth / 2;
   var centerY = window.innerHeight / 2;
@@ -176,121 +216,18 @@ function animate_revealer() {
 	rev_logo.reveal();
 }
 
-// function parse_json() {
-  // // JQuery get json from url
-  // // http://api.jquery.com/jquery.parsejson/
-  // // GeoJSON source: https://dev.socrata.com/foundry/data.cityofnewyork.us/i4gi-tjb9
-  // // https://data.cityofnewyork.us/resource/i4gi-tjb9.json
-  // $.getJSON( "https://data.cityofnewyork.us/resource/i4gi-tjb9.json", function(data) {
-  //   //$.each(data, function(key, val) {
-  //   val = data[0];
-  //
-  //     // Get the coordinates of the traffic lines
-  //     var coordinatesLine = [];
-  //     var coordinatesString = val['link_points'].split(" ");
-  //
-  //     for (var i = 0; i < coordinatesString.length; i++) {
-  //         var coord = coordinatesString[i].split(',');
-  //         coordinatesLine.push(coord.map(Number).reverse());
-  //     }
-  //     console.log(coordinatesLine);
-  //
-  //       map.addLayer({
-  //               "id": "route",
-  //               "type": "line",
-  //               "source": {
-  //                   "type": "geojson",
-  //                   "data": {
-  //                       "type": "Feature",
-  //                       "properties": {},
-  //                       "geometry": {
-  //                           "type": "LineString",
-  //                           "coordinates": coordinatesLine
-  //                       }
-  //                   }
-  //               },
-  //               "layout": {
-  //                   "line-join": "miter",
-  //                   "line-cap": "butt"
-  //               },
-  //               "paint": {
-  //                   "line-color": "#db7b2b",
-  //                   "line-opacity": 0.75,
-  //                   "line-width": 4
-  //               }
-  //           });
-  //
-  //   //});
-  // });
+// // Helper functions for Mercator mapping
+// function mercX(lon) {
+//   lon = lon * (pi/180);
+//   var a = (256 / pi) * Math.pow(2, zoom);
+//   var b = lon + pi;
+//   return a * b;
 // }
-
-function parse_json() {
-  d3.json('https://data.cityofnewyork.us/resource/i4gi-tjb9.json', function(err, data) {
-    if (err) throw err;
-    //console.log(data);
-
-    var i = 0;
-    var timer = window.setInterval(function() {
-      if (i < data.length) {
-          // data.features[0].geometry.coordinates.push(coordinates[i]);
-          // map.getSource('trace').setData(data);
-          // map.panTo(coordinates[i]);
-
-          // get the coordinates of the traffic lines
-          // to draw a straight line, we only take the first two points
-          var coordinatesLine = [];
-          var coordinatesString = data[i]['link_points'].split(" ");
-          var coordinates = [];
-
-          // console.log(coordinatesString);
-          for (var j = 0; j < coordinatesString.length; j++) {
-              if (!coordinatesString[j].isEmpty) {
-                var coord = coordinatesString[j].split(',');
-                coordinatesLine.push(coord.map(Number).reverse());
-              }
-          }
-          //console.log(coordinatesLine[0]);
-          for (var j = 0; j < coordinatesLine.length; j++) {
-            if (coordinatesLine[j] != 0) {
-              coordinates.push(coordinatesLine[j]);
-            }
-            if (coordinates.length >= 2) {
-              break;
-            }
-          }
-          console.log(coordinates);
-          // var geoPath = d3.geoPath();
-          // var geoMultiPoint = {
-          //         "type": "MultiPoint",
-          //         "coordinates": coordinates
-          // };
-          //console.log(coordinates);
-          // var geoPath = d3.geoPath();
-          //
-          // var geoLineString = {
-          //     "type": "LineString",
-          //     "coordinates": coordinates
-          // };
-          //
-          // var width = 400,
-          //     height = 400,
-          //     geoPath = d3.geoPath();
-          //     // SVG Container
-          //
-          // var svgContainer = d3.select("body").append("svg")
-          //     .attr("width", width)
-          //     .attr("height", height)
-          //     .style("border", "2px solid steelblue")
-          //
-          // var lineStringPath = svgContainer.append("path")
-          //     .attr("d", "M-73.994441,40.77158L-73.99455,40.7713004")
-          //     .style("stroke", "#FF00FF");
-          i++;
-      }
-      else {
-          window.clearInterval(timer);
-      }
-    }, 1000);
-
-  });
-}
+//
+// function mercY(lat) {
+//   lat = lat * (pi/180);
+//   var a = (256 / pi) * Math.pow(2, zoom);
+//   var b = Math.tan(pi / 4 + lat / 2);
+//   var c = pi - Math.log(b);
+//   return a * c;
+// }
