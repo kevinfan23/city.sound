@@ -134,21 +134,21 @@ function parse_json() {
     var music_timer = window.setInterval(function() {
       if (j == 13) {
         setTimeout(function() {
-          var chord = new Howl({
-            src: [chords[j]],
-            autoplay: true,
-            volume: 0.2,
-          });
-          //chord.play();
+          // var chord = new Howl({
+          //   src: [chords[j]],
+          //   autoplay: true,
+          //   volume: 0.2,
+          // });
+          // //chord.play();
         }, 300);
       }
       else {
-        var chord = new Howl({
-          src: [chords[j]],
-          autoplay: true,
-          volume: 0.2,
-        });
-        //chord.play();
+        // var chord = new Howl({
+        //   src: [chords[j]],
+        //   autoplay: true,
+        //   volume: 0.2,
+        // });
+        // //chord.play();
       }
       j++;
     }, 3090);
