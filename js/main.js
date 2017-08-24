@@ -137,18 +137,18 @@ function parse_json() {
           var chord = new Howl({
             src: [chords[j]],
             autoplay: true,
-            volume: 0.3,
+            volume: 0.2,
           });
-          chord.play();
+          //chord.play();
         }, 300);
       }
       else {
         var chord = new Howl({
           src: [chords[j]],
           autoplay: true,
-          volume: 0.3,
+          volume: 0.2,
         });
-        chord.play();
+        //chord.play();
       }
       j++;
     }, 3090);
